@@ -6,11 +6,39 @@ https://en.wikipedia.org/wiki/Barranquenho
 based on https://cm-barrancos.pt/upload_files/1/3/Noticias/2025/II%20Congresso%20Barranquenho/Conven%C3%A7%C3%A3o%20Ortogr%C3%A1fica%20do%20Barranquenho%20junho%202025%20final.pdf
 """
 
+# all vowel graphemes: oral + nasal, plain + accented
+VOWELS = "aeiouáéíóúàèìòùãẽĩõũâêîôû"
+# graphemes carrying an explicit stress mark (acute/grave/circumflex) or a
+# tilde, which marks the tonic nasal vowel in this orthography
+ACCENTED = "áéíóúàèìòùãẽĩõũâêîôû"
+
+
+def _stressed_index(chars):
+    """Index of the stressed vowel grapheme.
+
+    An explicit accent fixes the stress. Otherwise the Portuguese default
+    applies: the penultimate vowel for words ending in a vowel (optionally
+    followed by ``s``), the last vowel otherwise.
+    """
+    vowel_idx = [i for i, c in enumerate(chars) if c in VOWELS]
+    if not vowel_idx:
+        return -1
+    for i, c in enumerate(chars):
+        if c in ACCENTED:
+            return i
+    last = chars[-1]
+    penult = chars[-2] if len(chars) > 1 else ""
+    ends_open = last in VOWELS or (last == "s" and penult in VOWELS)
+    if ends_open and len(vowel_idx) >= 2:
+        return vowel_idx[-2]
+    return vowel_idx[-1]
+
 
 def phonemize(word: str):
     vowels = "aeiouáéíóúàèìòùãẽĩõũâêîôû"
     has_stress = any(c in word for c in "áéíóúàèìòùãẽĩõũâêîôû")
     chars = list(word.lower())
+    stress_idx = _stressed_index(chars)
     phonemes = [None] * len(chars)
 
     # first pass - special digraphs
@@ -71,15 +99,9 @@ def phonemize(word: str):
         elif char == "a" and idx == final_idx - 1 and next_char == "s": # -as
             phonemes[idx] = "ɐ"
         elif char == "a":
-            candidates = ["ɐ", "a"]
-            # TODO - how to disambiguate?
-            if prev_char and prev_char in "c":
-                phonemes[idx] = "ɐ"
-            # default to stress falling in second-before-last syllable
-            elif not has_stress and "a" not in chars[idx+1:-2]:
-                phonemes[idx] = "a"
-            else:
-                phonemes[idx] = "ɐ"
+            # stressed bare ``a`` is the open central [a]; unstressed ``a``
+            # reduces to the near-open central [ɐ]
+            phonemes[idx] = "a" if idx == stress_idx else "ɐ"
         # E
         elif char in "éèe" and (next_char == "m" or next_char == "n"): # nasal
             phonemes[idx] = "ẽj"
@@ -95,9 +117,10 @@ def phonemize(word: str):
         elif char == "e" and next_char == "ã":
             phonemes[idx] = "j" #  "leãu"
         elif char == "e":
-            candidates = ["ɛ", "e", "j"]
-            # TODO - how to disambiguate
-            phonemes[idx] = "e"
+            # stressed bare ``e`` is the close-mid [e]; unstressed ``e``
+            # reduces to the central [ɨ] (e caduc). Word-final and the
+            # pre-final ``-es`` cases are already handled above.
+            phonemes[idx] = "e" if idx == stress_idx else "ɨ"
         # I
         elif char in "íìi" and (next_char == "m" or next_char == "n"): # nasal
             phonemes[idx] = "ĩ"
@@ -115,9 +138,10 @@ def phonemize(word: str):
         elif char == "ô":  # closed
             phonemes[idx] = "o"
         elif char == "o":
-            candidates = ["ͻ", "o"]
-            # TODO - how to disambiguate
-            phonemes[idx] = "o"
+            # stressed bare ``o`` is the close-mid [o]; unstressed ``o``
+            # raises to [u], the consistent European-Portuguese reduction
+            # retained in Barranquenho
+            phonemes[idx] = "o" if idx == stress_idx else "u"
         # U
         elif char in "úùu" and (next_char == "m" or next_char == "n"):  # nasal diphtong
             phonemes[idx] = "ũ"

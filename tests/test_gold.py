@@ -29,7 +29,6 @@ Rule coverage:
 - v is always [b] (betacism: Gramática p. 17; Convenção p. 30)
 - Convention-signature headwords from the Dicionário 2025
 """
-import pytest
 from g2p_barranquenho import phonemize
 
 
@@ -465,7 +464,7 @@ class TestStops:
 
     def test_v_is_b(self):
         # Betacism: <v> → /b/ (Gramática p. 17; Convenção p. 30)
-        out = phonemize("biba")
+        out = phonemize("vida")
         assert out[0] == "b"
 
 
@@ -509,7 +508,9 @@ class TestDicionarioHeadwords:
         # comunhâu (comunhão): tonic nasal diphthong [ɐ̃w]
         # (Convenção pp. 26–27; Gramática pp. 16–17)
         out = phonemize("comunhâu")
-        assert "ɐ" in out  # <â> → ɐ (tonic closed)
+        joined = "".join(out)
+        assert "ɐ̃w" in joined  # <âu> → [ɐ̃w] nasal diphthong
+
 
     def test_catchondeu_tch(self):
         # catchondeu: <tch> → /tʃ/ (Convenção p. 31; Gramática p. 20)

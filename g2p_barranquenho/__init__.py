@@ -142,7 +142,6 @@ def phonemize(word: str):
     for idx, char in enumerate(chars):
         if char is None:
             continue
-        prev_prev_char = chars[idx - 2] if idx > 1 else ""
         prev_char = chars[idx - 1] if idx > 0 else ""
         next_char = chars[idx + 1] if idx < len(chars) - 1 else ""
 
@@ -158,6 +157,12 @@ def phonemize(word: str):
             phonemes[idx] = "ɐ͂"
         elif char in "áà":
             phonemes[idx] = "a"
+        elif char == "â" and next_char in ("u", "i"):
+            # Nasal diphthongs <âu> [ɐ̃w], <âi> [ɐ̃j] — tonic finals
+            # (Convenção pp. 26-27; Gramática pp. 16-17: comunhâu, mâi)
+            phonemes[idx] = "ɐ̃"
+            phonemes[idx + 1] = "w" if next_char == "u" else "j"
+            chars[idx + 1] = None
         elif char == "â":  # closed tonic
             phonemes[idx] = "ɐ"
         elif char == "a" and idx == final_idx:  # final -a
@@ -225,6 +230,11 @@ def phonemize(word: str):
             phonemes[idx] = "õ"
         elif char in "óò":
             phonemes[idx] = "ɔ"
+        elif char == "ô" and next_char == "i":
+            # Nasal diphthong <ôi> [õj] (Convenção pp. 26-27: patrôi)
+            phonemes[idx] = "õ"
+            phonemes[idx + 1] = "j"
+            chars[idx + 1] = None
         elif char == "ô":
             phonemes[idx] = "o"
         elif char == "o":

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1a1](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.1a1) (2026-06-12)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.0a1...0.1.1a1)
+
+**Merged pull requests:**
+
+- fix: align the engine with the official orthographic convention [\#5](https://github.com/TigreGotico/g2p_barranquenho/pull/5) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.1.0a1](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.0a1) (2026-06-12)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/af9fa55f241b94829d69d5f79141c580ea7a1790...0.1.0a1)

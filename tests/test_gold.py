@@ -1,36 +1,43 @@
 """Gold test suite for g2p_barranquenho.
 
-Pins the current behaviour of phonemize() per rule. Cases marked xfail are
-genuine divergences from the documented rule; they are recorded so they can
-be fixed in a dedicated PR rather than silently broken.
+Pins the current behaviour of phonemize() per rule, aligned with the official
+orthographic convention suite (2025):
+
+  - Convenção Ortográfica do Barranquenho (June 2025) — "Convenção 2025"
+  - Gramática Básica de Barranquenho (July 2025), Gonçalves/Navas/Correia — "Gramática 2025"
+  - Dicionário de Barranquenho (2025-07-11), Gonçalves/Navas/Ferreira — "Dicionário 2025"
 
 Rule coverage:
-- README worked examples (exact outputs from the docstring / __main__)
+- README worked examples (updated to convention-correct outputs)
 - Digraphs: nh, ch, lh, tch, qu (e/i), gu (e/i)
 - Nasal vowels: a/e/i/o/u before m/n; ã; -ão/-ãu diphthong
+  * <em>/<en> → [ẽ] plain (Convenção p. 26; Gramática p. 15)
 - Stress-conditioned vowel quality: a (stressed [a] vs unstressed [ɐ])
 - Stress-conditioned e: stressed [e], unstressed [ɨ], final [ɨ]
 - Stress-conditioned o: stressed [o], unstressed [u]
 - Accented vowels: á é ê â ô ó í ú
+- Final atone <i> → /i/ vowel (Gramática p. 14; Convenção pp. 20–21)
 - Word-final e/a/o reduction
+- Coda <s> → [h] aspiration (Convenção pp. 28–29)
 - r/rr: initial [r], medial [ɾ], rr→[r]
-- s/ss: initial [s], medial [z], ss→[s]
+- s/ss: initial [s], intervocalic [z], coda [h], ss→[s]
 - c before e/i → [s]; c elsewhere → [k]
 - g before e/i/í → [ʒ]; g elsewhere → [g]
-- x: initial [ʃ]; after n/m [ʃ]; before xc [s]+elide; vv-x [ʃ]; aux-x [s];
-      vowel-x-vowel [z]; before p/t [s]; default [ʃ]
-- v is always [b] (Barranquenho orthographic convention)
+- x: initial [ʃ]; after n/m [ʃ]; intervocalic learned [ks]; intervocalic [z];
+     before xc [s]+elide; before p/t [s]; default [ʃ]
+  (Convenção pp. 28, 31; Gramática pp. 18–19)
+- v is always [b] (betacism: Gramática p. 17; Convenção p. 30)
+- Convention-signature headwords from the Dicionário 2025
 """
-import pytest
 from g2p_barranquenho import phonemize
 
 
 # ---------------------------------------------------------------------------
-# README / __main__ worked examples (ground truth from the source file)
+# README / __main__ worked examples
 # ---------------------------------------------------------------------------
 
 class TestReadmeExamples:
-    """Exact outputs shown in README.md and the __main__ block."""
+    """Outputs from the __main__ block, corrected to the convention."""
 
     def test_paraba(self):
         assert phonemize("paraba") == ["p", "ɐ", "ɾ", "a", "b", "ɐ"]
@@ -39,7 +46,8 @@ class TestReadmeExamples:
         assert phonemize("pássaru") == ["p", "a", "s", "ɐ", "ɾ", "u"]
 
     def test_biba(self):
-        assert phonemize("biba") == ["b", "j", "b", "ɐ"]
+        # <i> is final atone → /i/ vowel, NOT /j/ (Gramática p. 14; Convenção pp. 20–21)
+        assert phonemize("biba") == ["b", "i", "b", "ɐ"]
 
     def test_cahtelu(self):
         assert phonemize("cahtelu") == ["k", "ɐ", "h", "t", "e", "l", "u"]
@@ -60,7 +68,8 @@ class TestReadmeExamples:
         assert phonemize("que") == ["k", "ɨ"]
 
     def test_aqui(self):
-        assert phonemize("aquí") == ["ɐ", "k", "j"]
+        # <í> accented → /i/ vowel (Gramática p. 14; Convenção p. 20)
+        assert phonemize("aquí") == ["ɐ", "k", "i"]
 
 
 # ---------------------------------------------------------------------------
@@ -73,7 +82,6 @@ class TestDigraphs:
         assert out[0] == "ɲ"
 
     def test_nh_medial(self):
-        # manhán: m-nh-á-n
         out = phonemize("manhán")
         assert "ɲ" in out
 
@@ -86,11 +94,11 @@ class TestDigraphs:
         assert out[0] == "ʎ"
 
     def test_tch(self):
+        # <tch> → /tʃ/ (Convenção p. 31; Gramática p. 20)
         out = phonemize("tche")
         assert out[0] == "tʃ"
 
     def test_qu_before_e(self):
-        # 'qu' before e/i → k, u is silent
         out = phonemize("que")
         assert out == ["k", "ɨ"]
 
@@ -113,37 +121,36 @@ class TestDigraphs:
 
 class TestNasalVowels:
     def test_a_before_m(self):
-        # ambu: a+m → ɐ͂, m absorbed
         out = phonemize("ambu")
         assert out[0] == "ɐ͂"
         assert "m" not in out
 
     def test_a_before_n(self):
-        # cantá: a+n → ɐ͂
         out = phonemize("cantá")
         assert "ɐ͂" in out
 
     def test_e_before_m(self):
-        # sento: e+n → ẽj
+        # <em> → [ẽ] plain nasal vowel (Convenção p. 26; Gramática p. 15).
+        # NOT the pt-PT diphthong [ẽj].
         out = phonemize("sento")
-        assert "ẽj" in out
+        assert "ẽ" in out
+        assert "ẽj" not in out
 
     def test_e_before_n(self):
+        # <en> → [ẽ] plain nasal vowel (Convenção p. 26; Gramática p. 15).
         out = phonemize("cento")
-        assert "ẽj" in out
+        assert "ẽ" in out
+        assert "ẽj" not in out
 
     def test_i_before_n(self):
-        # lindo: i+n → ĩ
         out = phonemize("lindo")
         assert "ĩ" in out
 
     def test_o_before_m(self):
-        # bom: o+m → õ
         out = phonemize("bom")
         assert "õ" in out
 
     def test_u_before_n(self):
-        # mundo: u+n → ũ
         out = phonemize("mundo")
         assert "ũ" in out
 
@@ -151,15 +158,154 @@ class TestNasalVowels:
         assert phonemize("ã") == ["ɐ͂"]
 
     def test_ao_diphthong(self):
-        # pão: p + ɐ͂ + w (ão)
         out = phonemize("pão")
         assert "ɐ͂" in out
-        assert "w" in out or "u" in out  # the glide may surface as w or u
+        assert "w" in out or "u" in out
 
     def test_leau_diphthong(self):
-        # leãu: l + j (e before ã) + ɐ͂ + w
         out = phonemize("leãu")
         assert "ɐ͂" in out
+
+
+# ---------------------------------------------------------------------------
+# Convention-signature nasal vowel tests (Convenção p. 26; Gramática p. 15)
+# ---------------------------------------------------------------------------
+
+class TestConventionNasalEM_EN:
+    """<em>/<en> → [ẽ] — the convention is explicit (not a diphthong)."""
+
+    def test_tempu(self):
+        # tempu (tempo): t + ẽ + p + u
+        out = phonemize("tempu")
+        assert out == ["t", "ẽ", "p", "u"]
+
+    def test_tentu(self):
+        # tentu (tento): t + ẽ + t + u
+        out = phonemize("tentu")
+        assert out == ["t", "ẽ", "t", "u"]
+
+    def test_quen(self):
+        # quen (quem): k + ẽ  (final -n consumed into nasal vowel)
+        out = phonemize("quen")
+        assert out == ["k", "ẽ"]
+
+
+# ---------------------------------------------------------------------------
+# Final atone <i> is vowel /i/ — NOT glide /j/
+# (Gramática p. 14; Convenção pp. 20–21)
+# ---------------------------------------------------------------------------
+
+class TestFinalAtoneI:
+    def test_sociedadi(self):
+        # sociedadi (sociedade): final -i is /i/ vowel
+        out = phonemize("sociedadi")
+        assert out[-1] == "i"
+
+    def test_libri(self):
+        # libri (livre): l + i + b + ɾ + i
+        out = phonemize("libri")
+        assert out == ["l", "i", "b", "ɾ", "i"]
+
+    def test_Fernandi(self):
+        # Fernandi (Fernando): final -i is /i/ vowel
+        out = phonemize("fernandi")
+        assert out[-1] == "i"
+
+
+# ---------------------------------------------------------------------------
+# Coda <s> → [h] aspiration (Convenção pp. 28–29; Dicionário: mehmu, Lihboa)
+# ---------------------------------------------------------------------------
+
+class TestCodaS:
+    def test_mehmu_h_already_written(self):
+        # mehmu (mesmo): m + e + h + m + u  — aspiration already in spelling
+        out = phonemize("mehmu")
+        assert out == ["m", "e", "h", "m", "u"]
+
+    def test_coda_s_becomes_h(self):
+        # When a Portuguese-spelled word reaches the engine, coda <s> → [h].
+        # e.g. "mesmo" spelled Portuguese-style: m + e + h + m + u
+        # Use a clear coda context: "asma" — a + h + m + a
+        out = phonemize("asma")
+        assert "h" in out
+        assert "ʃ" not in out
+
+    def test_intervocalic_s_stays_z(self):
+        # intervocalic <s> is /z/ (casa, rosa) — not affected
+        out = phonemize("casa")
+        assert "z" in out
+
+    def test_initial_s_stays_s(self):
+        out = phonemize("saku")
+        assert out[0] == "s"
+
+
+# ---------------------------------------------------------------------------
+# <x> — three-way convention rule
+# (Convenção pp. 28, 31; Gramática pp. 18–19)
+# ---------------------------------------------------------------------------
+
+class TestXDisambiguation:
+    def test_x_initial_is_sh(self):
+        # xaili, xisto — word-initial <x> → [ʃ]
+        out = phonemize("xisto")
+        assert out[0] == "ʃ"
+
+    def test_x_after_n_is_sh(self):
+        # enxame: <n> before <x> → [ʃ] (Convenção p. 29 — <ns>/<nx> aspiration)
+        # Previously crashed due to None-guard bug; fixed.
+        out = phonemize("enxame")
+        assert "ʃ" in out
+
+    def test_x_before_xc_is_s(self):
+        # exceção: x before c → [s], c elided
+        out = phonemize("exceção")
+        assert out[1] == "s"
+
+    def test_x_after_double_vowel_ei_is_z(self):
+        # peixe: e-i-x — in the new three-way rule, intervocalic x is [z]
+        # unless the word is in the learned-[ks] set.
+        # (Pt-PT "ameixa/peixe → [ʃ]" branch is removed; Barranquenho convention
+        # does not enumerate this class separately.)
+        out = phonemize("peixe")
+        assert "z" in out
+
+    def test_x_exame_vowel_x_vowel(self):
+        # exame: intervocalic <x> → [z] (Gramática p. 19: "z escreve-se com z, -s, x")
+        out = phonemize("exame")
+        assert "z" in out
+
+    def test_x_before_p_is_s(self):
+        # exportar: x before p → [s] (consonant cluster onset)
+        out = phonemize("exportar")
+        assert "s" in out
+
+    def test_x_before_t_is_s(self):
+        # texto: x before t → [s]
+        out = phonemize("texto")
+        assert "s" in out
+
+    def test_x_default_is_sh(self):
+        # marx: r before x, no following vowel — default → [ʃ]
+        out = phonemize("marx")
+        assert out[-1] == "ʃ"
+
+    def test_x_vowel_x_vowel_is_z(self):
+        # luxo: vowel-x-vowel → [z]
+        out = phonemize("luxo")
+        assert "z" in out
+
+    def test_x_auxiliar_intervocalic_z(self):
+        # auxiliar: au-x — the old "aux-" → [s] pt-PT branch is removed;
+        # this is now intervocalic → [z] per the convention three-way rule.
+        out = phonemize("auxiliar")
+        assert "z" in out
+
+    def test_x_crucifixu_learned_ks(self):
+        # crucifixu: enumerated learned-word set → [ks]
+        # (Convenção p. 31; Gramática p. 20)
+        out = phonemize("crucifixu")
+        assert "ks" in out
 
 
 # ---------------------------------------------------------------------------
@@ -167,32 +313,22 @@ class TestNasalVowels:
 # ---------------------------------------------------------------------------
 
 class TestStressVowelQuality:
-    """Stressed vowels have full quality; unstressed reduce."""
-
-    # ---- a ----
 
     def test_stressed_a_is_open(self):
-        # kata: stress on a at index 1 → [a]; final a → [ɐ]
         out = phonemize("kata")
         assert out[1] == "a"
         assert out[-1] == "ɐ"
 
     def test_unstressed_a_reduces_to_schwa(self):
-        # paraba: pa-ra-ba; stress on second a (index 3 = 'a')
         out = phonemize("paraba")
-        # The first 'a' (idx 1) is unstressed → ɐ; stressed 'a' (idx 3) → a
         assert "a" in out
         assert "ɐ" in out
 
     def test_final_a_is_schwa(self):
-        # any plain -a ending reduces
         out = phonemize("mesa")
         assert out[-1] == "ɐ"
 
-    # ---- e ----
-
     def test_stressed_e_is_close_mid(self):
-        # mesa: stress on first e → [e]
         out = phonemize("mesa")
         assert out[1] == "e"
 
@@ -201,22 +337,16 @@ class TestStressVowelQuality:
         assert out[-1] == "ɨ"
 
     def test_unstressed_e_reduces(self):
-        # café: first e is unstressed → ɨ
         out = phonemize("café")
-        assert out[1] == "ɐ"  # 'a' not 'e' at position 1 — skipping; test ɛ at end
-        # é at end is accented → ɛ
+        assert out[1] == "ɐ"
         assert out[-1] == "ɛ"
 
-    # ---- o ----
-
     def test_stressed_o_is_close_mid(self):
-        # bolo: stress on first o → [o]; second o is unstressed → [u]
         out = phonemize("bolo")
         assert out[1] == "o"
         assert out[-1] == "u"
 
     def test_unstressed_o_raises_to_u(self):
-        # toco: stress on first o → [o]; unstressed final o → [u]
         out = phonemize("toco")
         assert out[-1] == "u"
 
@@ -227,22 +357,16 @@ class TestStressVowelQuality:
 
 class TestAccentedVowels:
     def test_acute_a(self):
-        # má → [m, a]
         assert phonemize("má") == ["m", "a"]
 
     def test_acute_e(self):
-        # pé → [p, ɛ]
         assert phonemize("pé") == ["p", "ɛ"]
 
     def test_circumflex_e(self):
-        # ê → [e]  (closed mid e)
-        out = phonemize("cahtelu")  # contains plain e
-        # test a word with explicit ê
         out2 = phonemize("vêde")
         assert "e" in out2
 
     def test_circumflex_a(self):
-        # â → [ɐ]
         out = phonemize("câmara")
         assert out[1] == "ɐ"
 
@@ -250,9 +374,9 @@ class TestAccentedVowels:
         assert phonemize("só") == ["s", "ɔ"]
 
     def test_acute_i(self):
-        # aquí → [ɐ, k, j]
+        # <í> accented → /i/ vowel (Gramática p. 14; Convenção p. 20)
         out = phonemize("aquí")
-        assert "j" in out
+        assert "i" in out
 
     def test_circumflex_o(self):
         out = phonemize("côto")
@@ -275,7 +399,7 @@ class TestRhotics:
     def test_rr_collapses_to_trill(self):
         out = phonemize("carro")
         assert "r" in out
-        assert out.count("r") == 1  # rr → single [r]
+        assert out.count("r") == 1
 
     def test_initial_r_word_perro(self):
         out = phonemize("perro")
@@ -292,7 +416,6 @@ class TestSibilants:
         assert out[0] == "s"
 
     def test_medial_s_voiced(self):
-        # mesa: s is medial → [z]
         out = phonemize("mesa")
         assert "z" in out
 
@@ -340,70 +463,66 @@ class TestStops:
         assert out[0] == "g"
 
     def test_v_is_b(self):
-        # v is never used in Barranquenho orthography; maps to [b]
-        out = phonemize("biba")  # written with b not v
+        # Betacism: <v> → /b/ (Gramática p. 17; Convenção p. 30)
+        out = phonemize("vida")
         assert out[0] == "b"
 
 
 # ---------------------------------------------------------------------------
-# x disambiguation (9 branches)
+# Convention-signature headwords from Dicionário 2025
+# Diagnostic entries whose spelling directly demonstrates grapheme rules.
 # ---------------------------------------------------------------------------
 
-class TestXDisambiguation:
-    def test_x_initial_is_sh(self):
-        out = phonemize("xisto")
-        assert out[0] == "ʃ"
+class TestDicionarioHeadwords:
+    def test_mehmu(self):
+        # mehmu (mesmo): coda-s already written as <h> (Convenção pp. 28–29)
+        out = phonemize("mehmu")
+        assert out == ["m", "e", "h", "m", "u"]
 
-    def test_x_after_n_is_sh(self):
-        # enxame: n before x → [ʃ]  (crashes on current engine — genuine bug)
-        pytest.xfail("enxame crashes: prev_char can be None after nasal vowel "
-                     "nulling; engine bug in prev_char None-guard")
+    def test_passaru(self):
+        # pássaru (pássaro): proparoxytone, final <u> is /u/ atone
+        out = phonemize("pássaru")
+        assert out == ["p", "a", "s", "ɐ", "ɾ", "u"]
 
-    def test_x_before_xc_is_s(self):
-        # exceção: x before c → [s], c elided
-        out = phonemize("exceção")
-        assert out[1] == "s"
+    def test_altu(self):
+        # altu (alto): final <u> → /u/
+        out = phonemize("altu")
+        assert out[-1] == "u"
 
-    def test_x_after_double_vowel_ei_is_sh(self):
-        # peixe: ei-x → [ʃ]
-        out = phonemize("peixe")
-        assert "ʃ" in out
+    def test_pequenu(self):
+        # pequenu (pequeno): pretonic <e> kept; final <u> → /u/
+        out = phonemize("pequenu")
+        assert out[-1] == "u"
 
-    def test_x_after_au_is_s(self):
-        # auxiliar: au-x → [s]
-        out = phonemize("auxiliar")
-        assert "s" in out
+    def test_cantá(self):
+        # cantá (cantar): tonic final <á>, -r deleted in spelling
+        out = phonemize("cantá")
+        assert out[-1] == "a"
 
-    def test_x_exame_vowel_x_vowel(self):
-        # exame: e-x-a: prev_char='e' (vowel, idx>1 is False at idx=1)
-        # prev_prev_char='' which evaluates True in 'in vowels' — same bug as exportar
-        # so engine falls into vowel-vowel-x branch with prev_prev='' → ʃ instead of z
-        pytest.xfail(
-            "exame: '' in vowels evaluates True (empty string is substring); "
-            "vowel-x-vowel branch unreachable when x is at idx=1; engine returns ʃ not z"
-        )
+    def test_bêju(self):
+        # bêju (beijo): <ê> closed → [e]
+        out = phonemize("bêju")
+        assert "e" in out
 
-    def test_x_before_p_is_s(self):
-        # exportar: documented rule says x before p/t → [s]; engine produces [ʃ]
-        # because '' in vowels is True in Python, triggering the vowel-vowel-x branch
-        # (prev_prev_char='' at idx=1) — genuine engine bug
-        pytest.xfail(
-            "exportar: '' in vowels evaluates True (empty string is substring); "
-            "x-before-p branch is unreachable when prev_prev_char='' at idx=1; "
-            "engine produces ʃ instead of s"
-        )
+    def test_nasal_diphthong_âu(self):
+        # comunhâu (comunhão): tonic nasal diphthong [ɐ̃w]
+        # (Convenção pp. 26–27; Gramática pp. 16–17)
+        out = phonemize("comunhâu")
+        joined = "".join(out)
+        assert "ɐ̃w" in joined  # <âu> → [ɐ̃w] nasal diphthong
 
-    def test_x_before_t_is_s(self):
-        # texto: x before t → [s]
-        out = phonemize("texto")
-        assert "s" in out
 
-    def test_x_default_is_sh(self):
-        # marx: r before x, no following vowel — default branch → [ʃ]
-        out = phonemize("marx")
-        assert out[-1] == "ʃ"
+    def test_catchondeu_tch(self):
+        # catchondeu: <tch> → /tʃ/ (Convenção p. 31; Gramática p. 20)
+        out = phonemize("catchondeu")
+        assert "tʃ" in out
 
-    def test_x_vowel_x_vowel_is_z(self):
-        # luxo: vowel-x-vowel (not after au, not before óx/áxi) → [z]
-        out = phonemize("luxo")
-        assert "z" in out
+    def test_libri_final_i(self):
+        # libri (livre): final <i> is /i/ vowel (Gramática p. 14)
+        out = phonemize("libri")
+        assert out[-1] == "i"
+
+    def test_piconeru_ê(self):
+        # piconêru: <ê> → [e] closed tonic
+        out = phonemize("piconêru")
+        assert "e" in out

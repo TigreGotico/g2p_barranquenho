@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1a2](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.1a2) (2026-07-11)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.1a1...0.1.1a2)
+
+**Merged pull requests:**
+
+- refactor: build on the orthography2ipa shared lattice \(tokenizer + rescorers\) [\#8](https://github.com/TigreGotico/g2p_barranquenho/pull/8) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.1.1a1](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.1a1) (2026-06-12)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.0a1...0.1.1a1)

@@ -12,9 +12,9 @@ accents and the open/closed/nasal distinction comes through:
 ```python
 from g2p_barranquenho import phonemize
 
-phonemize("cantá")    # ['k', 'ɐ͂', 't', 'a']   — á is open stressed /a/
-phonemize("ambu")     # ['ɐ͂', 'b', 'u']        — a before m nasalises
-phonemize("manhán")   # ['m', 'ɐ', 'ɲ', 'ɐ͂']   — final án nasalises
+phonemize("cantá")    # ['k', 'ɐ̃', 't', 'a']   — á is open stressed /a/
+phonemize("ambu")     # ['ɐ̃', 'b', 'u']        — a before m nasalises
+phonemize("manhán")   # ['m', 'ɐ', 'ɲ', 'ɐ̃']   — final án nasalises
 ```
 
 A bare `a` is also raised after `c` and reduced word-finally:
@@ -89,7 +89,7 @@ table = {w: phonemize(w) for w in vocab}
 ```python
 from g2p_barranquenho import phonemize
 
-"".join(phonemize("manhán"))   # 'mɐɲɐ͂'
+"".join(phonemize("manhán"))   # 'mɐɲɐ̃'
 ```
 
 ### Transcribe a phrase, keeping word boundaries

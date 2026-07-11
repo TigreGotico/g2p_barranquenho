@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1a3](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.1a3) (2026-07-11)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.1a2...0.1.1a3)
+
+**Merged pull requests:**
+
+- refactor: adopt o2i 1.64 is\_orthographic\_vowel \(ẽĩũ\) + re-pin \>=1.64.0a1; keep atomic coda-nasal rescorer [\#10](https://github.com/TigreGotico/g2p_barranquenho/pull/10) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.1.1a2](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.1a2) (2026-07-11)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.1a1...0.1.1a2)

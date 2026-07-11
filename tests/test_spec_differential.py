@@ -70,8 +70,9 @@ _PROBE_CASES = [
     ("ɲ",  "nhada",  "ɲ"),    # nh → [ɲ]
     ("b",  "boca",   "b"),    # b → [b]
     ("k",  "cato",   "k"),    # c elsewhere → [k]
-    ("ɐ͂", "ambu",  "ɐ͂"),   # nasal a
-    ("ẽj", "sento",  "ẽj"),   # nasal e
+    ("ɐ̃", "ambu",  "ɐ̃"),   # nasal a (coda m)
+    ("ẽ",  "sento",  "ẽ"),    # <en> → [ẽ] plain nasal, NOT pt-PT [ẽj]
+                              # (Convenção p. 26; Gramática p. 15)
 ]
 
 # Spec graphemes to check against (mapping grapheme → spec candidates)

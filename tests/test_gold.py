@@ -10,8 +10,11 @@ orthographic convention suite (2025):
 Rule coverage:
 - README worked examples (updated to convention-correct outputs)
 - Digraphs: nh, ch, lh, tch, qu (e/i), gu (e/i)
-- Nasal vowels: a/e/i/o/u before m/n; ã; -ão/-ãu diphthong
+- Nasal vowels: a/e/i/o/u before a SYLLABLE-FINAL (coda) m/n; ã; -ão/-ãu
+  diphthong. An intervocalic m/n is a syllable onset and leaves the vowel
+  oral (lhano [ʎanu], comunhâu [kumuɲɐ̃w]) — Convenção p. 26.
   * <em>/<en> → [ẽ] plain (Convenção p. 26; Gramática p. 15)
+  * nasal vowels use the IPA/Unicode COMBINING TILDE U+0303 ([ɐ̃] = U+0250 U+0303)
 - Stress-conditioned vowel quality: a (stressed [a] vs unstressed [ɐ])
 - Stress-conditioned e: stressed [e], unstressed [ɨ], final [ɨ]
 - Stress-conditioned o: stressed [o], unstressed [u]
@@ -56,13 +59,13 @@ class TestReadmeExamples:
         assert phonemize("boca") == ["b", "o", "k", "ɐ"]
 
     def test_ambu(self):
-        assert phonemize("ambu") == ["ɐ͂", "b", "u"]
+        assert phonemize("ambu") == ["ɐ̃", "b", "u"]
 
     def test_canta(self):
-        assert phonemize("cantá") == ["k", "ɐ͂", "t", "a"]
+        assert phonemize("cantá") == ["k", "ɐ̃", "t", "a"]
 
     def test_manhan(self):
-        assert phonemize("manhán") == ["m", "ɐ", "ɲ", "ɐ͂"]
+        assert phonemize("manhán") == ["m", "ɐ", "ɲ", "ɐ̃"]
 
     def test_que(self):
         assert phonemize("que") == ["k", "ɨ"]
@@ -122,12 +125,12 @@ class TestDigraphs:
 class TestNasalVowels:
     def test_a_before_m(self):
         out = phonemize("ambu")
-        assert out[0] == "ɐ͂"
+        assert out[0] == "ɐ̃"
         assert "m" not in out
 
     def test_a_before_n(self):
         out = phonemize("cantá")
-        assert "ɐ͂" in out
+        assert "ɐ̃" in out
 
     def test_e_before_m(self):
         # <em> → [ẽ] plain nasal vowel (Convenção p. 26; Gramática p. 15).
@@ -155,16 +158,46 @@ class TestNasalVowels:
         assert "ũ" in out
 
     def test_a_tilde(self):
-        assert phonemize("ã") == ["ɐ͂"]
+        assert phonemize("ã") == ["ɐ̃"]
 
     def test_ao_diphthong(self):
         out = phonemize("pão")
-        assert "ɐ͂" in out
+        assert "ɐ̃" in out
         assert "w" in out or "u" in out
 
     def test_leau_diphthong(self):
         out = phonemize("leãu")
-        assert "ɐ͂" in out
+        assert "ɐ̃" in out
+
+
+# ---------------------------------------------------------------------------
+# Coda-conditioned nasalisation (Convenção p. 26)
+# A vowel nasalises only before a SYLLABLE-FINAL (coda) m/n. An intervocalic
+# m/n opens the next syllable and leaves the vowel ORAL — these words were
+# over-nasalised by the previous hand-rolled cascade.
+# ---------------------------------------------------------------------------
+
+class TestIntervocalicNasalIsOral:
+    def test_lhano_oral(self):
+        # lha-no: the n opens 'no' → oral [a], n kept
+        assert phonemize("lhano") == ["ʎ", "a", "n", "u"]
+
+    def test_comunhau_oral_om(self):
+        # co-mu-nhâu: the m opens 'mu' → oral, o raises to [u]
+        assert phonemize("comunhâu") == ["k", "u", "m", "u", "ɲ", "ɐ̃", "w"]
+
+    def test_maximu_oral_im(self):
+        # má-xi-mu: the m opens 'mu' → oral [i], m kept
+        assert phonemize("maximu") == ["m", "ɐ", "z", "i", "m", "u"]
+
+    def test_pequenu_oral_en(self):
+        # pe-que-nu: the n opens 'nu' → oral [e], n kept
+        assert phonemize("pequenu") == ["p", "ɨ", "k", "e", "n", "u"]
+
+    def test_coda_nasal_still_nasalises(self):
+        # ám-bu / can-tá: the m/n is a coda → the vowel nasalises, m/n absorbed
+        assert phonemize("ambu") == ["ɐ̃", "b", "u"]
+        assert phonemize("cantá") == ["k", "ɐ̃", "t", "a"]
 
 
 # ---------------------------------------------------------------------------

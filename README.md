@@ -1,10 +1,19 @@
 ## `g2p_barranquenho` - Barranquenho Phonemizer
 
-This repository provides a simple, rule-based Grapheme-to-Phoneme (G2P) converter for the **Barranquenho** language.
+This repository provides a rule-based Grapheme-to-Phoneme (G2P) converter for the **Barranquenho** language.
 
 [Barranquenho](https://en.wikipedia.org/wiki/Barranquenho) is an Ibero-Romance language (often classified as a dialect) spoken in the municipality of Barrancos, Portugal, which shares many features with the nearby Spanish dialects of Extremadura and Andalusia.
 
 The rules implemented in the `phonemize` function are based on the three official 2025 normative sources listed in the **Sources** section below.
+
+### Architecture
+
+`phonemize` builds on the shared [`orthography2ipa`](https://github.com/OpenVoiceOS/orthography2ipa) pronunciation lattice rather than a private tokenizer:
+
+- **Tokenization** is done by the language-agnostic `orthography2ipa.phonetok.PhonetokTokenizer` — a maximal-munch trie over the Barranquenho grapheme set (the consonant multigraphs `tch ch nh lh rr ss` plus the single letters). There is no hand-rolled digraph detection or index arithmetic.
+- **Barranquenho-specific rules** — coda-conditioned nasalization, nasal diphthongs, stress-conditioned vowel quality, `⟨qu⟩`/`⟨gu⟩` glide elision, `⟨s⟩` → `[h]` coda aspiration, and the three-way `⟨x⟩` rule — are each expressed as an `orthography2ipa.rescorer.LatticeRescorer` re-costing the shared per-grapheme lattice slots, instead of a parallel private cascade.
+
+Nasal vowels use the IPA/Unicode nasalization diacritic COMBINING TILDE (U+0303), e.g. `[ɐ̃]`.
 
 ### 🚀 Usage
 
@@ -22,9 +31,9 @@ for word in [...]:
 # biba ['b', 'i', 'b', 'ɐ']
 # cahtelu ['k', 'ɐ', 'h', 't', 'e', 'l', 'u']
 # boca ['b', 'o', 'k', 'ɐ']
-# ambu ['ɐ͂', 'b', 'u']
-# cantá ['k', 'ɐ͂', 't', 'a']
-# manhán ['m', 'ɐ', 'ɲ', 'ɐ͂']
+# ambu ['ɐ̃', 'b', 'u']
+# cantá ['k', 'ɐ̃', 't', 'a']
+# manhán ['m', 'ɐ', 'ɲ', 'ɐ̃']
 # que ['k', 'ɨ']
 # aquí ['ɐ', 'k', 'i']
 ```

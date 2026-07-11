@@ -26,6 +26,7 @@ import unicodedata
 from dataclasses import replace
 
 from orthography2ipa import get
+from orthography2ipa.vowels import is_orthographic_vowel
 from orthography2ipa.phonetok import (
     PhonetokTokenizer, SegmentSlot, Candidate, flat_contexts,
 )
@@ -35,8 +36,12 @@ from orthography2ipa.rescorer import (
 
 LANG = "ext-PT-x-barrancos"
 
-# all vowel graphemes: oral + nasal, plain + accented
-VOWELS = "aeiouáéíóúàèìòùãẽĩõũâêîôû"
+# Whether a grapheme is a vowel is answered by orthography2ipa's canonical
+# ``vowels.is_orthographic_vowel`` (oral + nasal, plain + accented, incl. the
+# ẽ/ĩ/ũ nasal vowels it recognises since o2i 1.64) rather than a private
+# inventory, so the Barranquenho engine and the shared spec never drift.
+_is_vowel = is_orthographic_vowel
+
 # graphemes carrying an explicit stress mark (acute/grave/circumflex) or a
 # tilde, which marks the tonic nasal vowel in this orthography
 ACCENTED = "áéíóúàèìòùãẽĩõũâêîôû"
@@ -85,8 +90,6 @@ _BASE = {
     "ã": "ɐ" + _NASAL, "ẽ": "ẽ", "ĩ": "ĩ", "õ": "õ", "ũ": "ũ",
 }
 
-_VOWEL_GRAPHEMES = set(VOWELS)
-
 
 def _stressed_index(chars):
     """Return the index of the stressed vowel in *chars*.
@@ -105,7 +108,7 @@ def _stressed_index(chars):
     Only accented <í>/<ú> are oxytone triggers, which are already caught by
     rule 1. (Gramática pp. 12, 14; Convenção pp. 20–21, 35.)
     """
-    vowel_idx = [i for i, c in enumerate(chars) if c in VOWELS]
+    vowel_idx = [i for i, c in enumerate(chars) if _is_vowel(c)]
     if not vowel_idx:
         return -1
     # Rule 1: explicit accent
@@ -115,7 +118,7 @@ def _stressed_index(chars):
     # Rules 2–3: positional default
     last = chars[-1]
     penult = chars[-2] if len(chars) > 1 else ""
-    ends_open = last in VOWELS or (last == "s" and penult in VOWELS)
+    ends_open = _is_vowel(last) or (last == "s" and _is_vowel(penult))
     if ends_open and len(vowel_idx) >= 2:
         return vowel_idx[-2]
     return vowel_idx[-1]
@@ -146,7 +149,7 @@ def _is_coda_nasal(next_g: str, next2_g: str) -> bool:
     *intervocalic* ⟨m⟩/⟨n⟩ is a syllable onset — *lhano* [ʎanu],
     *comunhâu* [kumuɲɐ̃w], *máximu* [mazimu] — and leaves the vowel oral."""
     return next_g in ("m", "n") and (
-        next2_g == "" or next2_g[0] not in VOWELS)
+        next2_g == "" or not _is_vowel(next2_g[0]))
 
 
 class _NasalCodaDeleteRescorer(LatticeRescorer):
@@ -171,7 +174,7 @@ class _VowelRescorer(LatticeRescorer):
 
     def rescore(self, slot: SegmentSlot, ctx: RescoreContext):
         g = slot.grapheme
-        if g not in _VOWEL_GRAPHEMES:
+        if not _is_vowel(g):
             return slot.candidates
         ipa = self._vowel(g, ctx)
         return (Candidate(ipa, 0.0),)
@@ -234,7 +237,7 @@ class _VowelRescorer(LatticeRescorer):
         if g == "i":
             if prev_g in ("â", "ô", "ã"):
                 return "j"  # glide of a nasal diphthong (mâi, patrôi)
-            next_is_vowel = bool(next_g) and next_g[0] in VOWELS
+            next_is_vowel = bool(next_g) and _is_vowel(next_g[0])
             return "j" if next_is_vowel else "i"
 
         # ---- O ----
@@ -315,7 +318,7 @@ class _SibilantRescorer(LatticeRescorer):
         if ctx.is_word_initial:
             return (Candidate("s", 0.0),)
         next_g = _next_g(ctx)
-        if next_g and next_g[0] in VOWELS:
+        if next_g and _is_vowel(next_g[0]):
             return (Candidate("z", 0.0),)  # intervocalic
         return (Candidate("h", 0.0),)  # coda / pre-consonant / word-final
 
@@ -337,7 +340,7 @@ class _XRescorer(LatticeRescorer):
         next_g = _next_g(ctx)
         if prev_g in ("n", "m"):
             return (Candidate("ʃ", 0.0),)
-        if prev_g and prev_g[0] in VOWELS and next_g and next_g[0] in VOWELS:
+        if prev_g and _is_vowel(prev_g[0]) and next_g and _is_vowel(next_g[0]):
             return (Candidate("z", 0.0),)
         if next_g == "c" or next_g in ("p", "t"):
             return (Candidate("s", 0.0),)

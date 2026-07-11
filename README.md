@@ -11,9 +11,10 @@ The rules implemented in the `phonemize` function are based on the three officia
 `phonemize` builds on the shared [`orthography2ipa`](https://github.com/OpenVoiceOS/orthography2ipa) pronunciation lattice rather than a private tokenizer:
 
 - **Tokenization** is done by the language-agnostic `orthography2ipa.phonetok.PhonetokTokenizer` — a maximal-munch trie over the Barranquenho grapheme set (the consonant multigraphs `tch ch nh lh rr ss` plus the single letters). There is no hand-rolled digraph detection or index arithmetic.
+- **Vowel identity** is decided by `orthography2ipa.vowels.is_orthographic_vowel` (which recognises the `ẽ ĩ ũ` nasal vowels), so the engine shares one vowel inventory with the spec instead of keeping a private copy.
 - **Barranquenho-specific rules** — coda-conditioned nasalization, nasal diphthongs, stress-conditioned vowel quality, `⟨qu⟩`/`⟨gu⟩` glide elision, `⟨s⟩` → `[h]` coda aspiration, and the three-way `⟨x⟩` rule — are each expressed as an `orthography2ipa.rescorer.LatticeRescorer` re-costing the shared per-grapheme lattice slots, instead of a parallel private cascade.
 
-Nasal vowels use the IPA/Unicode nasalization diacritic COMBINING TILDE (U+0303), e.g. `[ɐ̃]`.
+Nasal vowels are emitted as a single atomic phoneme carrying the IPA/Unicode nasalization diacritic COMBINING TILDE (U+0303), e.g. `[ɐ̃]`. The coda `⟨m⟩`/`⟨n⟩` is absorbed into the preceding nasal vowel rather than surfacing as its own segment, so a nasal vowel is one list item, not a vowel followed by a separate tilde.
 
 ### 🚀 Usage
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2a1](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.2a1) (2026-07-13)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.1a3...0.1.2a1)
+
+**Merged pull requests:**
+
+- fix\(ci\): coverage install\_extras is pip-install args, not an extra name [\#12](https://github.com/TigreGotico/g2p_barranquenho/pull/12) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.1.1a3](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.1a3) (2026-07-11)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.1a2...0.1.1a3)

@@ -1,18 +1,19 @@
 """G2PPlugin wrapper for Barranquenho.
 
 Wraps the rule-based ``phonemize()`` function in the shared
-``orthography2ipa.g2p_plugin.G2PPlugin`` base class so it integrates with
+orthography2ipa's spec data and lattice. It is an engine built ON that library,
+not a plugin to it — nothing there discovers or calls this. It integrates with
 the broader orthography2ipa toolchain.  The ``phonemize()`` function remains
 the stable public API; this class is the integration layer.
 """
 from typing import List, Optional
 
-from orthography2ipa.g2p_plugin import G2PPlugin, WordContext
+from orthography2ipa import WordContext
 
 from g2p_barranquenho import phonemize
 
 
-class BarranquenhoG2PPlugin(G2PPlugin):
+class BarranquenhoG2PPlugin:
     """Rule-based G2P for Barranquenho (ext-PT-x-barrancos)."""
 
     @property

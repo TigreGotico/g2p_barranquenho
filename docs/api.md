@@ -20,13 +20,13 @@ Convert one written Barranquenho word to a list of IPA phoneme strings.
 **Returns**
 
 - `list[str]` — the phonemes in reading order. Each item is one IPA segment.
-  Items may be multi-character: nasal vowels carry a combining tilde (`ɐ͂`, `ẽj`),
+  Items may be multi-character: nasal vowels carry a combining tilde (`ɐ̃`, `ɐ̃w`),
   and the `tch` digraph yields the affricate `tʃ`. Letters consumed by a digraph
   or by a doubled consonant produce a single entry, so the list is generally
   shorter than the input string.
 
 ```python
-phonemize("ambu")     # ['ɐ͂', 'b', 'u']
+phonemize("ambu")     # ['ɐ̃', 'b', 'u']
 phonemize("biba")     # ['b', 'j', 'b', 'ɐ']
 phonemize("pássaru")  # ['p', 'a', 's', 'ɐ', 'ɾ', 'u']
 ```
@@ -51,7 +51,7 @@ so their component letters are not re-read in pass 2:
 position:
 
 - Nasal context — a vowel directly before `m`/`n` nasalises and swallows that
-  consonant: `a→ɐ͂`, `e→ẽj`, `i→ĩ`, `o→õ`, `u→ũ` (`ambu → ['ɐ͂', 'b', 'u']`).
+  consonant: `a→ɐ̃`, `e→ẽ`, `i→ĩ`, `o→õ`, `u→ũ` (`ambu → ['ɐ̃', 'b', 'u']`).
 - Tilde vowels (`ã õ`) are nasal on their own; acute/grave (`á à`, `ó ò`, …) mark
   open stressed quality (`á→a`, `ó→ɔ`); circumflex (`â ê ô`) marks closed quality.
 - Word-final `-a` / `-e` reduce (`a→ɐ`, `e→ɨ`), as do `-as` / `-es`.

@@ -27,7 +27,7 @@ phonemize("boca")     # ['b', 'o', 'k', 'ɐ']
 The conversion runs in two passes over the letters: first the digraphs
 (`tch ch nh lh qu gu`), then the remaining individual graphemes — vowels with
 their nasal, stressed and closed variants, then consonants. The output items are
-plain strings, some of them multi-character (`tʃ`, `ɐ͂`, `ẽj`).
+plain strings, some of them multi-character (`tʃ`, `ɐ̃`, `ɐ̃w`).
 
 ## 3. First real call
 
@@ -39,7 +39,7 @@ for word in ["paraba", "cahtelu", "manhán", "aquí"]:
 
 # paraba  ['p', 'ɐ', 'ɾ', 'a', 'b', 'ɐ']
 # cahtelu ['k', 'ɐ', 'h', 't', 'e', 'l', 'u']
-# manhán  ['m', 'ɐ', 'ɲ', 'ɐ͂']
+# manhán  ['m', 'ɐ', 'ɲ', 'ɐ̃']
 # aquí    ['ɐ', 'k', 'j']
 ```
 
@@ -55,13 +55,13 @@ from g2p_barranquenho import phonemize
 
 phrase = "boca cantá que"
 transcription = [phonemize(w) for w in phrase.split()]
-# [['b', 'o', 'k', 'ɐ'], ['k', 'ɐ͂', 't', 'a'], ['k', 'ɨ']]
+# [['b', 'o', 'k', 'ɐ'], ['k', 'ɐ̃', 't', 'a'], ['k', 'ɨ']]
 ```
 
 Join the phonemes of a word into a single string when you want a compact form:
 
 ```python
-"".join(phonemize("cantá"))   # 'kɐ͂ta'
+"".join(phonemize("cantá"))   # 'kɐ̃ta'
 ```
 
 ## Where next

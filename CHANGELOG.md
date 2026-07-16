@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2a4](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.2a4) (2026-07-16)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.2a3...0.1.2a4)
+
+**Merged pull requests:**
+
+- refactor: drive Barranquenho from the orthography2ipa spec \(lattice-core\) [\#18](https://github.com/TigreGotico/g2p_barranquenho/pull/18) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.1.2a3](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.2a3) (2026-07-14)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.2a2...0.1.2a3)

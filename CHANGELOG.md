@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0a1](https://github.com/TigreGotico/g2p_barranquenho/tree/0.2.0a1) (2026-07-16)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.2a4...0.2.0a1)
+
+**Merged pull requests:**
+
+- feat: number expansion before the lattice \(Barranquenho numerals\) [\#20](https://github.com/TigreGotico/g2p_barranquenho/pull/20) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.1.2a4](https://github.com/TigreGotico/g2p_barranquenho/tree/0.1.2a4) (2026-07-16)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.2a3...0.1.2a4)

@@ -30,6 +30,10 @@ from typing import Callable, List, Optional
 
 from orthography2ipa import G2P
 
+from g2p_barranquenho.number_utils import (
+    normalize_numbers, BarranquenhoNumberParser,
+)
+
 LANG = "ext-PT-x-barrancos"
 
 # Modifier letters and suprasegmentals that bind to the preceding base phone
@@ -78,14 +82,23 @@ def _split_phones(ipa: str) -> List[str]:
     return phones
 
 
-def transcribe(text: str, *, normalizer: Optional[Callable[[str], str]] = normalize) -> str:
+def transcribe(text: str, *, normalizer: Optional[Callable[[str], str]] = normalize,
+               expand_numbers: bool = True) -> str:
     """Transcribe Barranquenho *text* to a single IPA string.
 
     A full utterance is transcribed as a whole so the spec's cross-word sandhi
     applies (coda-/s/ aspiration and deletion, article and conjunction
     destressing, elision). Word boundaries surface as spaces. Pass
     ``normalizer=None`` to feed *text* to the spec verbatim.
+
+    When *expand_numbers* is true (the default), numeric tokens are spelled out
+    into Barranquenho words by
+    :func:`~g2p_barranquenho.number_utils.normalize_numbers` first — the
+    normalizer stage, before the lattice — so digits are transcribed as words.
+    Pass ``expand_numbers=False`` to leave digits untouched.
     """
+    if expand_numbers:
+        text = normalize_numbers(text)
     if normalizer is not None:
         text = normalizer(text)
     return _engine().transcribe(text)

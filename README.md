@@ -42,6 +42,39 @@ transcribe("Comprámos pão e vinho na feira de Barrancos.")
 
 The `BarranquenhoG2PPlugin` class in `g2p_barranquenho.plugin` exposes the same engine behind the string-returning `transcribe` / `transcribe_word` methods other components in the toolchain expect.
 
+### Numbers
+
+Digits carry no orthography the lattice can read, so numeric tokens are spelled
+out into Barranquenho words *before* transcription — the normalizer stage. It is
+on by default in `transcribe`; pass `expand_numbers=False` to leave digits as-is.
+
+```python
+from g2p_barranquenho import transcribe
+from g2p_barranquenho.number_utils import normalize_numbers, BarranquenhoNumberParser
+
+transcribe("tenho 3 gatu")                       # 3 -> 'treh', then transcribed
+transcribe("tenho 3 gatu", expand_numbers=False)  # digit left to the spec
+
+# spell numbers to text without phonemising
+normalize_numbers("tenho 20 anu")                # 'tenho binti anu'
+normalize_numbers("la casa 1ª")                  # 'la casa primeira' (º masc / ª fem)
+
+# the verbaliser directly
+p = BarranquenhoNumberParser()
+p.cardinal(256)              # 'duzentuh e cinquenta e seih'
+p.cardinal(2, "feminine")    # 'duah'
+p.ordinal(1, "feminine")     # 'primeira'
+p.pronounce_token("3,5")     # 'treh birgula cincu'
+```
+
+Numeral groups join with the copulative **e** ("and"). Navas Sánchez-Élez (2011)
+documents no numeral paradigm, so most forms are reconstructed by the Convenção
+Ortográfica do Barranquenho (2025) spelling rules — final `-o→-u` / `-e→-i`, coda
+`-s` written `-h`, `v→b`. The lexemes Navas does attest (2 *douh*, 3 *treh*,
+6 *seih*, 7 *seti*, 10 *deh*, 14 *catorzi*, 20 *binti*, 100 *cien*, 1000 *mil*,
+1st *primeiru*) are in `number_utils.ATTESTED`; everything else is in
+`number_utils.DERIVED`, so a reader can tell citation from reconstruction.
+
 ### Documentation
 
 - [docs/quickstart.md](docs/quickstart.md) — install and the first call

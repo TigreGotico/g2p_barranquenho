@@ -8,7 +8,7 @@ from g2p_barranquenho import phonemize
 
 
 def main() -> None:
-    words = ["paraba", "pássaru", "biba", "boca", "que", "aquí"]
+    words = ["paraba", "pássaru", "biba", "boca", "que", "aqui"]
     for word in words:
         print(f"{word:10s} {phonemize(word)}")
 

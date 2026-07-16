@@ -1,16 +1,14 @@
-"""Tests for BarranquenhoG2PPlugin.
+"""Tests for BarranquenhoG2PPlugin, the string-returning integration adapter.
 
 Validates:
 - the engine exposes the surface downstream code relies on
 - language_codes declares the correct BCP-47 extension tag
-- transcribe() joins phonemize() word outputs into a plain IPA string
-- transcribe_word() equals transcribe() for a single-word input
-- transcribe preserves punctuation tokens that produce no phonemes
+- transcribe() phonemises a whole utterance (with cross-word sandhi)
+- transcribe_word() equals the joined phonemize() list for one word
 """
 import pytest
 
-
-from g2p_barranquenho import phonemize
+from g2p_barranquenho import phonemize, transcribe
 from g2p_barranquenho.plugin import BarranquenhoG2PPlugin
 
 
@@ -20,7 +18,7 @@ def plugin():
 
 
 class TestInterface:
-    def test_implements_shared_base(self, plugin):
+    def test_exposes_transcribe_methods(self, plugin):
         # An engine built ON orthography2ipa, not a plugin TO it — nothing there
         # discovers or calls this. The surface is what matters, not inheritance.
         for method in ("transcribe", "transcribe_word"):
@@ -31,41 +29,27 @@ class TestInterface:
 
 
 class TestTranscribe:
-    def test_single_word(self, plugin):
-        expected = "".join(phonemize("paraba"))
-        assert plugin.transcribe("paraba") == expected
+    def test_returns_string(self, plugin):
+        assert isinstance(plugin.transcribe("paraba"), str)
 
-    def test_multi_word_space_separated(self, plugin):
-        result = plugin.transcribe("boca cantá")
-        words = result.split()
-        assert len(words) == 2
-        assert words[0] == "".join(phonemize("boca"))
-        assert words[1] == "".join(phonemize("cantá"))
+    def test_matches_module_transcribe(self, plugin):
+        text = "Comprámos pão e vinho na feira de Barrancos."
+        assert plugin.transcribe(text) == transcribe(text)
 
-    def test_transcribe_returns_string(self, plugin):
-        out = plugin.transcribe("paraba")
-        assert isinstance(out, str)
-
-    def test_non_phonemic_token_passed_through(self, plugin):
-        # a comma or period produces no phonemes and should survive verbatim
-        out = plugin.transcribe(",")
-        assert out == ","
+    def test_applies_sandhi_across_words(self, plugin):
+        # the whole utterance elides across the word boundary (que o -> [k o])
+        per_word = " ".join("".join(phonemize(w)) for w in "que o".split())
+        assert plugin.transcribe("que o") != per_word
 
 
 class TestTranscribeWord:
     def test_returns_string(self, plugin):
-        out = plugin.transcribe_word("paraba")
-        assert isinstance(out, str)
+        assert isinstance(plugin.transcribe_word("paraba"), str)
 
     def test_equals_phonemize_joined(self, plugin):
         word = "pássaru"
         assert plugin.transcribe_word(word) == "".join(phonemize(word))
 
-    def test_equals_transcribe_single_word(self, plugin):
-        word = "manhán"
-        assert plugin.transcribe_word(word) == plugin.transcribe(word)
-
     def test_accepts_word_context_none(self, plugin):
-        # context=None must not raise
         out = plugin.transcribe_word("boca", context=None)
         assert out == "".join(phonemize("boca"))

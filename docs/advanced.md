@@ -1,77 +1,111 @@
-# Advanced — diacritics, the `x` rule, gotchas and recipes
+# Advanced — stress, sandhi, diacritics, and recipes
 
-`phonemize` is heuristic: the spelling carries most of the information the rules
-need, so the more faithfully a word is written (diacritics included), the better
-the transcription.
+The transcription is driven entirely by the `ext-PT-x-barrancos` language spec in
+[`orthography2ipa`](https://github.com/OpenVoiceOS/orthography2ipa). The spelling
+carries most of the information the spec needs, so the more faithfully a word is
+written — diacritics included — the better the transcription.
 
-## Diacritics steer the vowels
+## Stress
 
-The same base vowel maps to different IPA depending on its accent. Spell the
-accents and the open/closed/nasal distinction comes through:
+Output carries lexical stress, marked with `ˈ` before the stressed syllable. In a
+phone list the mark leads the phone that opens the stressed syllable:
 
 ```python
 from g2p_barranquenho import phonemize
 
-phonemize("cantá")    # ['k', 'ɐ̃', 't', 'a']   — á is open stressed /a/
-phonemize("ambu")     # ['ɐ̃', 'b', 'u']        — a before m nasalises
-phonemize("manhán")   # ['m', 'ɐ', 'ɲ', 'ɐ̃']   — final án nasalises
+phonemize("bonita")   # ['b', 'u', 'ˈn', 'i', 't', 'ɐ']  — paroxytone
+phonemize("cantá")    # ['k', 'ɐ̃', 'ˈt', 'a']            — accent fixes stress
 ```
 
-A bare `a` is also raised after `c` and reduced word-finally:
+An explicit accent fixes the stressed syllable; otherwise the spec's default
+placement applies. To match on a bare segment, strip the mark first:
+`p.lstrip("ˈˌ")`.
+
+## Cross-word sandhi
+
+`transcribe` scores a whole utterance, so effects that only exist between words
+surface. `phonemize`, working one word at a time, cannot see them.
 
 ```python
-phonemize("boca")     # ['b', 'o', 'k', 'ɐ']   — final -a → ɐ
-phonemize("paraba")   # ['p', 'ɐ', 'ɾ', 'a', 'b', 'ɐ']
+from g2p_barranquenho import transcribe
+
+transcribe("que o")   # 'k o'   — the vowel of que elides before a vowel
 ```
 
-## Word-final reduction
-
-Final `-a`/`-e` (and `-as`/`-es`) reduce, mirroring European Portuguese:
+Coda-`/s/` aspiration and deletion, and the destressing of articles and the
+conjunction `e`, are part of the same spec and show up in transcription:
 
 ```python
-phonemize("que")      # ['k', 'ɨ']             — final e → ɨ
-phonemize("boca")     # ['b', 'o', 'k', 'ɐ']   — final a → ɐ
+transcribe("O tempu não ehtá nada bom agora.")
+# 'o ˈtẽpu ˈnɐ̃w̃ eˈhta ˈnadɐ ˈbõ ɐˈɡɔɾɐ'   — coda s of ehtá aspirated to [h]
+
+transcribe("os meus currais")
+# 'o ˈmew ˈkuraj'   — final /s/ dropped throughout
 ```
+
+## Diacritics steer the vowels
+
+The same base vowel maps to different IPA depending on its accent and position.
+Spell the accents and the open/closed/nasal distinctions come through:
+
+```python
+phonemize("cantá")    # ['k', 'ɐ̃', 'ˈt', 'a']   — á is open stressed /a/
+phonemize("ambu")     # ['ˈɐ̃', 'b', 'u']        — a before coda m nasalises
+phonemize("manhán")   # ['m', 'ɐ', 'ˈɲ', 'ɐ̃']   — final -án nasalises
+phonemize("boca")     # ['ˈb', 'ɔ', 'k', 'ɐ']   — final -a reduces to ɐ
+```
+
+A vowel directly before a syllable-final `m`/`n` nasalises and swallows that
+consonant, so a nasal vowel is one list item, not a vowel plus a separate tilde.
 
 ## Position-sensitive consonants
 
-`r` and `s` depend on where they sit; `ss`/`rr` collapse to a single phoneme:
+`r` and `s` depend on where they sit, and `ss`/`rr` collapse to a single
+phoneme:
 
 ```python
-phonemize("rato")     # ['r', 'ɐ', 't', 'o']   — initial r → r
-phonemize("paraba")   # ['p', 'ɐ', 'ɾ', 'a', 'b', 'ɐ']  — medial r → ɾ
-phonemize("pássaru")  # ['p', 'a', 's', 'ɐ', 'ɾ', 'u']  — ss → single s
+phonemize("rato")     # ['ˈr', 'a', 't', 'u']            — initial r → trill r
+phonemize("paraba")   # ['p', 'ɐ', 'ˈɾ', 'a', 'b', 'ɐ']  — medial r → tap ɾ
+phonemize("carro")    # ['ˈk', 'a', 'r', 'u']            — rr → single trill r
 ```
 
-## The `x` disambiguation
+Barranquenho writes `b` for `v` (betacism), so `vinho` → `ˈbiɲu`; `g` before a
+front vowel is `[ʒ]` (`gelo` → `ˈʒɛlu`).
 
-Word-medial `x` has no single rule in Portuguese spelling, so `phonemize` walks a
-ladder of pt-PT context heuristics to pick `ʃ`, `s` or `z`:
+## The digraphs
 
-- after `n`/`m`: `ʃ` (enxofre, enxame)
-- `x` + `c`: `s`, consuming the `c` (exceção)
-- vowel-vowel before `x`: `ʃ`, except `au` → `s` (peixe vs auxiliar)
-- vowel-`x`-vowel: `z`, except `ó/á` + `i` → `s` (exame vs máximo)
-- `x` + `p`/`t`: `s` (explorar, texto)
-- otherwise: `ʃ`
+`tch ch nh lh` and the front-vowel `qu`/`gu` are resolved as units:
 
 ```python
-phonemize("peixe")     # ['p', 'e', 'j', 'ʃ', 'ɨ']    — vowel-vowel-x → ʃ
-phonemize("texto")     # ['t', 'e', 's', 't', 'o']    — x + t → s
-phonemize("auxiliar")  # ['a', 'u', 's', 'j', 'l', 'j', 'a', 'ɾ']  — au-x → s
+phonemize("chave")    # 'ʃ' onset   -> 'ˈʃabɨ'
+phonemize("lhano")    # 'ʎ' onset   -> 'ˈʎanu'
+phonemize("nhada")    # 'ɲ' onset   -> 'ˈɲadɐ'
+phonemize("tchapa")   # 'tʃ' onset  -> 'ˈtʃapɐ'
+```
+
+Because the transcription is a flat string, the affricate `tʃ` appears as two
+adjacent characters; match it as a substring of the joined output rather than as
+a single list item.
+
+## The `x` letter
+
+Word-medial `x` has no single rule in Portuguese-based spelling; the spec picks
+`ʃ`, `s` or `z` from context:
+
+```python
+phonemize("peixe")    # -> 'ˈpejzɨ'
+phonemize("texto")    # -> 'ˈtɛʃtu'
 ```
 
 ## Gotchas
 
-- **One word per call.** `phonemize` does not tokenise. Pass `"boca cantá"` and
-  the space is treated as part of one word; split first.
-- **`v` and `k` are reshaped.** Barranquenho writes `b` for `v`, so `v → b`; `k`
-  (only in loanwords) and `q` both yield `k`.
-- **Output is flat.** No syllable boundaries and no stress marks — just the
-  segment list. Build your own grouping if you need syllables.
-- **Heuristic vowel quality.** Bare `e` and `o` default to `e`/`o`; bare `a`
-  uses a stress heuristic. Hand-written accents override these defaults, so prefer
-  fully-accented input.
+- **`phonemize` is one word; `transcribe` is an utterance.** Only `transcribe`
+  applies boundary effects. Passing a phrase to `phonemize` treats the whole
+  string as one token.
+- **Output carries stress marks.** Strip `ˈ`/`ˌ` if you need bare segments.
+- **`v` becomes `b`.** Barranquenho betacism; `k`/`q` both yield `[k]`.
+- **Prefer fully-accented input.** Missing diacritics leave the spec less to work
+  from and lower the accuracy.
 
 ## Recipes
 
@@ -81,27 +115,19 @@ phonemize("auxiliar")  # ['a', 'u', 's', 'j', 'l', 'j', 'a', 'ɾ']  — au-x →
 from g2p_barranquenho import phonemize
 
 vocab = ["boca", "cantá", "que", "manhán"]
-table = {w: phonemize(w) for w in vocab}
+table = {w: "".join(phonemize(w)) for w in vocab}
 ```
 
-### Compact string form
+### Transcribe a phrase with boundary effects
 
 ```python
-from g2p_barranquenho import phonemize
+from g2p_barranquenho import transcribe
 
-"".join(phonemize("manhán"))   # 'mɐɲɐ̃'
-```
-
-### Transcribe a phrase, keeping word boundaries
-
-```python
-from g2p_barranquenho import phonemize
-
-phrase = "boca cantá que"
-[(w, phonemize(w)) for w in phrase.split()]
+transcribe("Comprámos pão e vinho na feira de Barrancos.")
+# 'kõˈpɾamu ˈpɐ̃w̃ i ˈbiɲu nɐ ˈfejɾɐ dɨ bɐˈrɐ̃ku'
 ```
 
 ## Where next
 
 - [quickstart.md](quickstart.md) — install and the first call
-- [api.md](api.md) — the signature, return contract and rule passes
+- [api.md](api.md) — the functions, their return contracts, and the plugin

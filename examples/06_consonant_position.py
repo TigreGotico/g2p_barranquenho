@@ -12,8 +12,9 @@ def main() -> None:
     words = ["rato", "paraba", "saku", "pássaru"]
     for word in words:
         phonemes = phonemize(word)
-        rhotics = [p for p in phonemes if p in ("r", "ɾ")]
-        sibilants = [p for p in phonemes if p in ("s", "z")]
+        bare = [p.lstrip("ˈˌ") for p in phonemes]  # a phone may lead with stress
+        rhotics = [p for p in bare if p in ("r", "ɾ")]
+        sibilants = [p for p in bare if p in ("s", "z", "s̺", "z̺")]
         print(f"{word:10s} {phonemes}   r/ɾ={rhotics}  s/z={sibilants}")
 
 

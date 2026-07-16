@@ -1,9 +1,9 @@
 # Quickstart — Barranquenho in IPA
 
-`g2p_barranquenho` is a rule-based grapheme-to-phoneme (G2P) converter for
+`g2p_barranquenho` is a grapheme-to-phoneme (G2P) converter for
 [Barranquenho](https://en.wikipedia.org/wiki/Barranquenho), the Ibero-Romance
-variety spoken in Barrancos, Portugal. You hand it a written word and it hands
-back the IPA phonemes.
+variety spoken in Barrancos, Portugal. You hand it written Barranquenho and it
+hands back IPA.
 
 ## 1. Install
 
@@ -11,60 +11,63 @@ back the IPA phonemes.
 pip install -e .
 ```
 
-Pure Python, no runtime dependencies.
+It builds on [`orthography2ipa`](https://github.com/OpenVoiceOS/orthography2ipa),
+which is pulled in automatically. The Barranquenho phonology comes from that
+library's `ext-PT-x-barrancos` language spec.
 
-## 2. The one thing to understand
+## 2. Two functions
 
-There is exactly one public function. It takes a single word and returns a flat
-list of IPA phoneme strings:
+`phonemize` takes a single word and returns a flat list of IPA phones:
 
 ```python
 from g2p_barranquenho import phonemize
 
-phonemize("boca")     # ['b', 'o', 'k', 'ɐ']
+phonemize("boca")     # ['ˈb', 'ɔ', 'k', 'ɐ']
 ```
 
-The conversion runs in two passes over the letters: first the digraphs
-(`tch ch nh lh qu gu`), then the remaining individual graphemes — vowels with
-their nasal, stressed and closed variants, then consonants. The output items are
-plain strings, some of them multi-character (`tʃ`, `ɐ̃`, `ɐ̃w`).
+`transcribe` takes a whole utterance and returns one IPA string, applying
+cross-word sandhi:
 
-## 3. First real call
+```python
+from g2p_barranquenho import transcribe
+
+transcribe("boca cantá")   # 'ˈbɔkɐ kɐ̃ˈta'
+```
+
+Lexical stress is marked with `ˈ` before the stressed syllable; word boundaries
+in `transcribe` output are spaces.
+
+## 3. First real calls
 
 ```python
 from g2p_barranquenho import phonemize
 
-for word in ["paraba", "cahtelu", "manhán", "aquí"]:
+for word in ["paraba", "cahtelu", "manhán", "aqui"]:
     print(word, phonemize(word))
 
-# paraba  ['p', 'ɐ', 'ɾ', 'a', 'b', 'ɐ']
-# cahtelu ['k', 'ɐ', 'h', 't', 'e', 'l', 'u']
-# manhán  ['m', 'ɐ', 'ɲ', 'ɐ̃']
-# aquí    ['ɐ', 'k', 'j']
+# paraba  ['p', 'ɐ', 'ˈɾ', 'a', 'b', 'ɐ']
+# cahtelu ['k', 'ɐ', 'ˈh', 't', 'ɛ', 'l', 'u']
+# manhán  ['m', 'ɐ', 'ˈɲ', 'ɐ̃']
+# aqui    ['ˈɐ', 'k', 'i']
 ```
 
-`phonemize` lower-cases internally, so case does not matter. It expects a single
-word — split a sentence on whitespace and phonemize each token.
+Input is case-insensitive (it is lower-cased internally). `phonemize` expects a
+single word; for a phrase, use `transcribe`, which also resolves what happens
+between words.
 
-## 4. Whole-phrase transcription
-
-A one-liner turns a phrase into a list of per-word phoneme lists:
+## 4. Whole-utterance transcription
 
 ```python
-from g2p_barranquenho import phonemize
+from g2p_barranquenho import transcribe
 
-phrase = "boca cantá que"
-transcription = [phonemize(w) for w in phrase.split()]
-# [['b', 'o', 'k', 'ɐ'], ['k', 'ɐ̃', 't', 'a'], ['k', 'ɨ']]
+transcribe("O tempu não ehtá nada bom agora.")
+# 'o ˈtẽpu ˈnɐ̃w̃ eˈhta ˈnadɐ ˈbõ ɐˈɡɔɾɐ'
 ```
 
-Join the phonemes of a word into a single string when you want a compact form:
-
-```python
-"".join(phonemize("cantá"))   # 'kɐ̃ta'
-```
+Because the utterance is scored as a whole, boundary effects surface — for
+example `que o` elides to `k o`, which phonemising each word alone cannot see.
 
 ## Where next
 
-- [api.md](api.md) — the signature, the return contract and the rule passes
-- [advanced.md](advanced.md) — the diacritics that drive the rules, gotchas, and batch recipes
+- [api.md](api.md) — the functions, their return contracts, and the plugin
+- [advanced.md](advanced.md) — stress, sandhi, the diacritics that drive the spec, and recipes

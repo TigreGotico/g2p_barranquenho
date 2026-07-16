@@ -1,42 +1,33 @@
-"""G2PPlugin wrapper for Barranquenho.
+"""Integration wrapper exposing the Barranquenho engine to the wider toolchain.
 
-Wraps the rule-based ``phonemize()`` function in the shared
-orthography2ipa's spec data and lattice. It is an engine built ON that library,
-not a plugin to it — nothing there discovers or calls this. It integrates with
-the broader orthography2ipa toolchain.  The ``phonemize()`` function remains
-the stable public API; this class is the integration layer.
+Barranquenho phonology lives in the shared ``ext-PT-x-barrancos`` spec; this
+class adapts the package's ``transcribe``/``phonemize`` surface to the string
+methods other components expect. It is an engine built ON orthography2ipa, not
+a plugin discovered by it.
 """
 from typing import List, Optional
 
 from orthography2ipa import WordContext
 
-from g2p_barranquenho import phonemize
+from g2p_barranquenho import phonemize, transcribe
 
 
 class BarranquenhoG2PPlugin:
-    """Rule-based G2P for Barranquenho (ext-PT-x-barrancos)."""
+    """String-returning G2P adapter for Barranquenho (ext-PT-x-barrancos)."""
 
     @property
     def language_codes(self) -> List[str]:
         return ["ext-PT-x-barrancos"]
 
     def transcribe(self, text: str) -> str:
-        """Transcribe *text* to IPA.
+        """Transcribe *text* to an IPA string.
 
-        Each whitespace-separated token is transcribed individually via
-        ``phonemize()``.  Non-alphabetic tokens that produce no phonemes are
-        passed through unchanged so punctuation is preserved as-is.
+        The whole utterance is transcribed together so cross-word sandhi (coda
+        aspiration and deletion, article/conjunction destressing, elision)
+        applies; word boundaries surface as spaces.
         """
-        tokens = text.split()
-        parts = []
-        for token in tokens:
-            phones = phonemize(token)
-            if phones:
-                parts.append("".join(phones))
-            else:
-                parts.append(token)
-        return " ".join(parts)
+        return transcribe(text)
 
     def transcribe_word(self, word: str, context: Optional[WordContext] = None) -> str:
-        """Transcribe a single *word* to an IPA string."""
+        """Transcribe a single *word* to an IPA string (no cross-word sandhi)."""
         return "".join(phonemize(word))

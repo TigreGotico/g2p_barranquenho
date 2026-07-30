@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0a2](https://github.com/TigreGotico/g2p_barranquenho/tree/0.2.0a2) (2026-07-30)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.2.0a1...0.2.0a2)
+
+**Merged pull requests:**
+
+- docs: rewrite README in Simplified Technical English [\#22](https://github.com/TigreGotico/g2p_barranquenho/pull/22) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.2.0a1](https://github.com/TigreGotico/g2p_barranquenho/tree/0.2.0a1) (2026-07-16)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.1.2a4...0.2.0a1)

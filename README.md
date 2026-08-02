@@ -1,30 +1,100 @@
 ## `g2p_barranquenho` - Barranquenho Phonemizer
 
-This repository provides a simple, rule-based Grapheme-to-Phoneme (G2P) converter for the **Barranquenho** language.
+This repository holds a grapheme-to-phoneme (G2P) converter for the **Barranquenho** language. Give it written Barranquenho text and it returns IPA.
 
-[Barranquenho](https://en.wikipedia.org/wiki/Barranquenho) is an Ibero-Romance language (often classified as a dialect) spoken in the municipality of Barrancos, Portugal, which shares many features with the nearby Spanish dialects of Extremadura and Andalusia.
+[Barranquenho](https://en.wikipedia.org/wiki/Barranquenho) is an Ibero-Romance variety spoken in the municipality of Barrancos, Portugal. It shares several features with the neighbouring Extremaduran and Andalusian varieties of Spanish: coda-`/s/` aspiration, betacism (`v` becomes `[b]`), the alveolar trill, and southern vowel reduction.
 
-The rules implemented in the `phonemize` function are primarily based on the official Barranquenho Orthographic Convention
+### Install
 
-### 🚀 Usage
+```bash
+pip install -e .
+```
 
-The core functionality is provided by the `phonemize` function, which takes a word (string) and returns a list of International Phonetic Alphabet (IPA) phonemes.
+This pulls in [`orthography2ipa`](https://github.com/OpenVoiceOS/orthography2ipa) automatically.
+
+### Architecture
+
+The phonology lives in the shared [`orthography2ipa`](https://github.com/OpenVoiceOS/orthography2ipa) language spec `ext-PT-x-barrancos`. That spec holds the grapheme table, the allophone rules, the stress model, and the cross-word sandhi rules. It is the single source of truth for how Barranquenho is realised. This package is a thin wrapper around `orthography2ipa.G2P`, driven by that spec:
+
+- **`transcribe(text)`** phonemises a whole utterance, so the spec's cross-word sandhi applies (coda-`/s/` aspiration and deletion, article and conjunction destressing, vowel elision at word boundaries).
+- **`phonemize(word)`** phonemises one word and returns its phones as a list.
+- The package handles only caller-side text handling (case and Unicode normalisation) and this stable surface. The linguistic rules belong to the spec, so a rule improvement is an upstream edit that every consumer shares.
+
+Lexical stress is marked with `ˈ` before the stressed syllable. Nasal vowels carry the combining tilde `U+0303` (`ɐ̃`). A coda `m` or `n` is absorbed into the preceding nasal vowel rather than surfacing as its own segment.
+
+### Usage
+
+`phonemize` takes one word and returns a list of IPA phones. Join the list for a compact string.
 
 ```python
 from g2p_barranquenho import phonemize
 
-for word in [...]:
-    phonemes = phonemize(word)
-    print(word, phonemes)
-    
-# paraba ['p', 'ɐ', 'ɾ', 'a', 'b', 'ɐ']
-# pássaru ['p', 'a', 's', 'ɐ', 'ɾ', 'u']
-# biba ['b', 'j', 'b', 'ɐ']
-# cahtelu ['k', 'ɐ', 'h', 't', 'e', 'l', 'u']
-# boca ['b', 'o', 'k', 'ɐ']
-# ambu ['ɐ͂', 'b', 'u']
-# cantá ['k', 'ɐ͂', 't', 'a']
-# manhán ['m', 'ɐ', 'ɲ', 'ɐ͂']
-# que ['k', 'ɨ']
-# aquí ['ɐ', 'k', 'j']
+phonemize("boca")      # ['ˈb', 'ɔ', 'k', 'ɐ']
+phonemize("manhán")    # ['m', 'ɐ', 'ˈɲ', 'ɐ̃']
+phonemize("ambu")      # ['ˈɐ̃', 'b', 'u']
+
+"".join(phonemize("cahtelu"))   # 'kɐˈhtɛlu'
 ```
+
+`transcribe` takes a whole utterance and applies cross-word sandhi.
+
+```python
+from g2p_barranquenho import transcribe
+
+transcribe("O tempu não ehtá nada bom agora.")
+# 'o ˈtẽpu ˈnɐ̃w̃ eˈhta ˈnadɐ ˈbõ ɐˈɡɔɾɐ'
+
+transcribe("Comprámos pão e vinho na feira de Barrancos.")
+# 'kõˈpɾamu ˈpɐ̃w̃ i ˈbiɲu nɐ ˈfejɾɐ dɨ bɐˈrɐ̃ku'
+```
+
+The `BarranquenhoG2PPlugin` class in `g2p_barranquenho.plugin` exposes the same engine behind the string-returning `transcribe` and `transcribe_word` methods other components in the toolchain expect.
+
+### Numbers
+
+Digits carry no orthography the lattice can read, so the normalizer stage spells numeric tokens out into Barranquenho words before transcription. This runs by default in `transcribe`. Pass `expand_numbers=False` to leave digits as they are.
+
+```python
+from g2p_barranquenho import transcribe
+from g2p_barranquenho.number_utils import normalize_numbers, BarranquenhoNumberParser
+
+transcribe("tenho 3 gatu")                       # 3 -> 'treh', then transcribed
+transcribe("tenho 3 gatu", expand_numbers=False)  # digit left to the spec
+
+# spell numbers to text without phonemising
+normalize_numbers("tenho 20 anu")                # 'tenho binti anu'
+normalize_numbers("la casa 1ª")                  # 'la casa primeira' (º masc / ª fem)
+
+# the verbaliser directly
+p = BarranquenhoNumberParser()
+p.cardinal(256)              # 'duzentuh e cinquenta e seih'
+p.cardinal(2, "feminine")    # 'duah'
+p.ordinal(1, "feminine")     # 'primeira'
+p.pronounce_token("3,5")     # 'treh birgula cincu'
+```
+
+Numeral groups join with the copulative **e** ("and"). Navas Sánchez-Élez (2011) documents no numeral paradigm, so most forms come from the Convenção Ortográfica do Barranquenho (2025) spelling rules: final `-o` becomes `-u`, final `-e` becomes `-i`, coda `-s` is written `-h`, and `v` becomes `b`. The lexemes Navas does attest (2 *douh*, 3 *treh*, 6 *seih*, 7 *seti*, 10 *deh*, 14 *catorzi*, 20 *binti*, 100 *cien*, 1000 *mil*, 1st *primeiru*) live in `number_utils.ATTESTED`. Everything else lives in `number_utils.DERIVED`, so a reader can tell citation from reconstruction.
+
+### Documentation
+
+- [docs/quickstart.md](docs/quickstart.md) - install and the first call
+- [docs/api.md](docs/api.md) - the functions, their contracts, and the plugin
+- [docs/advanced.md](docs/advanced.md) - stress, sandhi, diacritics, and recipes
+- [examples/](examples/) - runnable scripts
+
+### Related projects
+
+- [OpenVoiceOS/orthography2ipa](https://github.com/OpenVoiceOS/orthography2ipa) - the upstream G2P engine and language-spec system this package drives
+
+### Sources
+
+The `ext-PT-x-barrancos` spec derives from the coordinated normative suite produced under the *Programa de Preservação e Valorização da Língua e Cultura Barranquenhas*, plus the phonetic descriptions of Navas Sánchez-Élez:
+
+- **Convenção Ortográfica do Barranquenho** (June 2025). Câmara Municipal de Barrancos / II Congresso Barranquenho working group.
+- **Gramática Básica de Barranquenho** (July 2025). Maria Filomena Gonçalves, María Victoria Navas, Victor M. Diogo Correia. Universidade de Évora, 1ª edição. ISBN 978-972-778-464-6.
+- **Dicionário de Barranquenho** (2025). Maria Filomena Gonçalves, María Victoria Navas, Vera Ferreira. Universidade de Évora, 1ª edição. ISBN 978-972-778-460-8.
+- **Navas Sánchez-Élez, M. V.** (2011). *El barranqueño: un modelo de lenguas en contacto*. Madrid: Editorial Complutense.
+
+### License
+
+Apache-2.0. See [LICENSE](LICENSE).

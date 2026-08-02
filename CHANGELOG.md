@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1a1](https://github.com/TigreGotico/g2p_barranquenho/tree/0.2.1a1) (2026-08-02)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.2.0a2...0.2.1a1)
+
+**Merged pull requests:**
+
+- fix: dev CI + orthography2ipa floor [\#24](https://github.com/TigreGotico/g2p_barranquenho/pull/24) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.2.0a2](https://github.com/TigreGotico/g2p_barranquenho/tree/0.2.0a2) (2026-07-30)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.2.0a1...0.2.0a2)

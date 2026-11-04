@@ -2,7 +2,7 @@
 
 Two gold sets, both shipped by the ``orthography2ipa`` dependency:
 
-- ``portuguese_tts/ext-PT-x-barrancos.tsv`` — 20 Barranquenho sentences whose
+- ``portuguese_tts/<spec key>.tsv`` — 20 Barranquenho sentences whose
   IPA was blind-verified by two judges against Navas (2011) and arbitrated,
   aligned to the 2025 orthographic convention. This is the primary target.
 - ``primary_sources/rows.jsonl`` — worked examples printed by Navas (2011),
@@ -22,10 +22,14 @@ import unicodedata
 import pytest
 
 import orthography2ipa
-from g2p_barranquenho import transcribe
+from orthography2ipa import resolve
+from g2p_barranquenho import LANG, transcribe
 
+# orthography2ipa names gold files and rows by the key it registers the spec
+# under, and keeps any older key as an exact alias of it.
+_SPEC = resolve(LANG)
 _GOLD_DIR = os.path.join(os.path.dirname(orthography2ipa.__file__), "data", "gold")
-_TTS = os.path.join(_GOLD_DIR, "portuguese_tts", "ext-PT-x-barrancos.tsv")
+_TTS = os.path.join(_GOLD_DIR, "portuguese_tts", f"{_SPEC}.tsv")
 _PRIMARY = os.path.join(_GOLD_DIR, "primary_sources", "rows.jsonl")
 
 _BINDING = "ːʲʷˠˤ͡"
@@ -87,7 +91,7 @@ def _load_primary():
     with open(_PRIMARY, encoding="utf-8") as f:
         for line in f:
             o = json.loads(line)
-            if o.get("lang") == "ext-PT-x-barrancos":
+            if o.get("lang") == _SPEC:
                 rows.append((o["orthography"], o["ipa"]))
     return rows
 
@@ -111,6 +115,6 @@ class TestPrimarySourceGold:
 
     def test_per_segmental(self):
         rows = _load_primary()
-        assert rows, "no ext-PT-x-barrancos primary rows found"
+        assert rows, f"no {_SPEC} primary rows found"
         per, _ = _corpus_per(rows, keep_stress=False)
         assert per <= 0.40, f"PER(segmental)={per:.3f}"

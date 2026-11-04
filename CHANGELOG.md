@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1a2](https://github.com/TigreGotico/g2p_barranquenho/tree/0.2.1a2) (2026-11-04)
+
+[Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.2.1a1...0.2.1a2)
+
+**Merged pull requests:**
+
+- test: find the Barranquenho gold by the key orthography2ipa registers [\#26](https://github.com/TigreGotico/g2p_barranquenho/pull/26) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.2.1a1](https://github.com/TigreGotico/g2p_barranquenho/tree/0.2.1a1) (2026-08-02)
 
 [Full Changelog](https://github.com/TigreGotico/g2p_barranquenho/compare/0.2.0a2...0.2.1a1)
